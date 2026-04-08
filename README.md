@@ -1,6 +1,6 @@
 # xAuth Android (Kotlin) SDK
 
-The xAuth Android SDK provides a Kotlin API that allow a developer to create applications that authenticate users using FIDO authenticators.
+The xAuth Android SDK provides a Kotlin APIs that allow a developer to create applications that authenticate users using FIDO authenticators.
 
 The FIDO (Fast Identity Online) specification is a set of protocols and standards developed to provide a secure and easy-to-use method for user authentication.
 
