@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "817528213089",
+    "project_id": "daonfidoapps",
+    "storage_bucket": "daonfidoapps.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:817528213089:android:01b1ca5ede1d584d4da420",
+        "android_client_info": {
+          "package_name": "com.daon.fido.sdk.sample"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxc5XxrUpQ7aIhZhtfprY50LJ1HciGi14"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:817528213089:android:15cdec69f93e6e704da420",
+        "android_client_info": {
+          "package_name": "com.daon.fido.sdk.sample.kt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxc5XxrUpQ7aIhZhtfprY50LJ1HciGi14"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
