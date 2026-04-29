@@ -3,7 +3,10 @@ package com.daon.fido.sdk.sample.kt.screens.intro
 import android.app.Application
 import android.content.SharedPreferences
 import android.os.CountDownTimer
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.daon.fido.sdk.sample.kt.settings.DevSettingsKeys
@@ -20,6 +23,7 @@ import com.daon.sdk.xauth.AccountListListener
 import com.daon.sdk.xauth.ChooseAuthenticatorListener
 import com.daon.sdk.xauth.IXUAF
 import com.daon.sdk.xauth.IXUAFService
+import com.daon.sdk.xauth.UserLockWarningListener
 import com.daon.sdk.xauth.core.Failure
 import com.daon.sdk.xauth.core.Group
 import com.daon.sdk.xauth.core.Policy
@@ -205,6 +209,21 @@ constructor(
         }
     }
 
+    private val userLockWarningListener = UserLockWarningListener { ->
+        Logger.logDebug(
+            IntroViewModel::class.java.simpleName,
+            "User lock warning received - one attempt remaining until user account is blocked",
+        )
+        Handler(Looper.getMainLooper()).post {
+            Toast.makeText(
+                    application,
+                    "One attempt remaining until user account is blocked",
+                    Toast.LENGTH_LONG,
+                )
+                .show()
+        }
+    }
+
     // Authenticate the user
     fun authenticate() {
         refreshExtensions()
@@ -214,6 +233,7 @@ constructor(
         _state.update { currentState -> currentState.copy(inProgress = true) }
 
         authentication.accountListListener = accountListListener
+        authentication.userLockWarningListener = userLockWarningListener
 
         viewModelScope.launch(Dispatchers.Default) {
             val bundle = ParameterBuilder()

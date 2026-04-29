@@ -165,6 +165,10 @@ constructor(
                 }
 
                 is Failure -> {
+                    Logger.logDebug(
+                        tag,
+                        "fido register failure: ${response.errorCode}, Message: ${response.errorMessage}",
+                    )
                     setInProgress(false)
                     emitEvent(
                         AuthenticatorsUiEvent.ShowToast(

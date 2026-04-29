@@ -10,8 +10,10 @@ import com.daon.sdk.authenticator.controller.OOTPController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 sealed class OOTPUiEvent {
@@ -41,6 +43,9 @@ constructor(application: Application, private val prefs: SharedPreferences) :
     private val _eventFlow = MutableSharedFlow<OOTPUiEvent>(replay = 1)
     val eventFlow: SharedFlow<OOTPUiEvent> = _eventFlow.asSharedFlow()
 
+    private val _inProgress = MutableStateFlow(false)
+    val inProgress = _inProgress.asStateFlow()
+
     private fun emitEvent(event: OOTPUiEvent) {
         Log.d(
             "OOTPViewModel",
@@ -59,10 +64,15 @@ constructor(application: Application, private val prefs: SharedPreferences) :
 
     /** Register OOTP (silent operation - no user input required) */
     fun register() {
+        if (_inProgress.value) return
+        Log.d("OOTPViewModel", "register: setting inProgress=true")
+        _inProgress.value = true
         viewModelScope.launch {
             try {
                 controller.register().collect { event -> handleRegistrationEvent(event) }
             } catch (e: Exception) {
+                Log.d("OOTPViewModel", "register: exception, setting inProgress=false")
+                _inProgress.value = false
                 showToastAndNavigateUp("Error: ${e.message}")
             }
         }
@@ -74,12 +84,20 @@ constructor(application: Application, private val prefs: SharedPreferences) :
      * @param transactionData optional transaction data from QR code or manual entry
      */
     fun authenticate(transactionData: String? = null) {
+        if (_inProgress.value) {
+            Log.d("OOTPViewModel", "authenticate() called but already in progress, ignoring")
+            return
+        }
+        Log.d("OOTPViewModel", "authenticate: setting inProgress=true")
+        _inProgress.value = true
         viewModelScope.launch {
             try {
                 controller.authenticate(transactionData).collect { event ->
                     handleAuthenticationEvent(event)
                 }
             } catch (e: Exception) {
+                Log.d("OOTPViewModel", "authenticate: exception, setting inProgress=false")
+                _inProgress.value = false
                 showToastAndNavigateUp("Error: ${e.message}")
             }
         }
@@ -94,6 +112,8 @@ constructor(application: Application, private val prefs: SharedPreferences) :
     }
 
     private fun handleRegistrationEvent(event: CaptureController.RegistrationEvent) {
+        Log.d("OOTPViewModel", "handleRegistrationEvent: setting inProgress=false, event=$event")
+        _inProgress.value = false
         when (event) {
             is CaptureController.RegistrationEvent.Success -> {
                 navigateUp()
@@ -116,8 +136,11 @@ constructor(application: Application, private val prefs: SharedPreferences) :
     }
 
     private fun handleAuthenticationEvent(event: CaptureController.AuthenticationEvent) {
+        Log.d("OOTPViewModel", "handleAuthenticationEvent: setting inProgress=false, event=$event")
+        _inProgress.value = false
         when (event) {
             is CaptureController.AuthenticationEvent.Success -> {
+                Log.d("OOTPViewModel", "Authentication successful")
                 navigateUp()
             }
 

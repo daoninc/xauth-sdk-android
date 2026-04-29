@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,6 +55,7 @@ fun AuthenticatePasscodeScreen(onNavigateUp: () -> Unit, passcodeController: Pas
     val passcodeViewModel = hiltViewModel<PasscodeViewModel>()
     val context = LocalContext.current
     val eventFlow = passcodeViewModel.eventFlow
+    val inProgress by passcodeViewModel.inProgress.collectAsState()
     var textValue1 by remember { mutableStateOf(TextFieldValue("")) }
 
     DisposableEffect(key1 = passcodeViewModel) {
@@ -124,9 +126,9 @@ fun AuthenticatePasscodeScreen(onNavigateUp: () -> Unit, passcodeController: Pas
                     KeyboardActions(
                         onDone = {
                             focusManager.clearFocus()
-                            if (textValue1.text.isNotEmpty()) {
+                            if (!inProgress && textValue1.text.isNotEmpty()) {
                                 passcodeViewModel.authenticate(textValue1.text)
-                            } else {
+                            } else if (textValue1.text.isEmpty()) {
                                 Toast.makeText(
                                         context,
                                         "Please enter your passcode",
@@ -144,15 +146,15 @@ fun AuthenticatePasscodeScreen(onNavigateUp: () -> Unit, passcodeController: Pas
                 text = "Authenticate",
                 onClick = {
                     focusManager.clearFocus()
-                    if (textValue1.text.isNotEmpty()) {
+                    if (!inProgress && textValue1.text.isNotEmpty()) {
                         passcodeViewModel.authenticate(textValue1.text)
-                    } else {
+                    } else if (textValue1.text.isEmpty()) {
                         Toast.makeText(context, "Please enter your passcode", Toast.LENGTH_SHORT)
                             .show()
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = textValue1.text.isNotEmpty(),
+                enabled = textValue1.text.isNotEmpty() && !inProgress,
             )
         }
     }

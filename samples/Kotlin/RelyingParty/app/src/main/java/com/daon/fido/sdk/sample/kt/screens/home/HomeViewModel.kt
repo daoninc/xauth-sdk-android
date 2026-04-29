@@ -2,6 +2,9 @@ package com.daon.fido.sdk.sample.kt.screens.home
 
 import android.app.Application
 import android.content.SharedPreferences
+import android.os.Handler
+import android.os.Looper
+import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.daon.fido.sdk.sample.kt.R
@@ -21,6 +24,7 @@ import com.daon.sdk.xauth.ConfirmationOTPListener
 import com.daon.sdk.xauth.IXUAF
 import com.daon.sdk.xauth.IXUAFService
 import com.daon.sdk.xauth.TransactionConfirmationListener
+import com.daon.sdk.xauth.UserLockWarningListener
 import com.daon.sdk.xauth.auth.Authentication
 import com.daon.sdk.xauth.core.Failure
 import com.daon.sdk.xauth.core.Group
@@ -145,12 +149,30 @@ constructor(
         viewModelScope.launch { emitEvent(HomeUiEvent.ShowToast("Your One-Time Password - $it")) }
     }
 
+    private val userLockWarningListener = UserLockWarningListener {
+        Logger.logDebug(
+            tag,
+            "User lock warning received: One more failed attempt will lock the user.",
+        )
+        // Show the toast directly on the main thread so it is visible regardless of
+        // which screen is currently active (e.g. the user may be on the Passcode screen).
+        Handler(Looper.getMainLooper()).post {
+            Toast.makeText(
+                    application,
+                    "One attempt remaining until user account is blocked",
+                    Toast.LENGTH_LONG,
+                )
+                .show()
+        }
+    }
+
     // Authenticate the user
     fun authenticate(isSingleShot: Boolean) {
         _state.update { currentState -> currentState.copy(inProgress = true) }
         val ixuaf = IXUAF(this.application, this.service, getFidoExtensions(prefs))
         authentication = ixuaf.authentication()
         authentication.transactionConfirmationListener = transactionConfirmationListener
+        authentication.userLockWarningListener = userLockWarningListener
         authentication.confirmationOTPListener = confirmationOTPListener
         viewModelScope.launch(Dispatchers.Default) {
             val parameters =

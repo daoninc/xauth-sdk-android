@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,6 +48,7 @@ fun RegisterPasscodeScreen(onNavigateUp: () -> Unit, passcodeController: Passcod
     val context = LocalContext.current
     val registerPasscodeViewModel = hiltViewModel<PasscodeViewModel>()
     val eventFlow = registerPasscodeViewModel.eventFlow
+    val inProgress by registerPasscodeViewModel.inProgress.collectAsState()
 
     var textValue1 by remember { mutableStateOf(TextFieldValue("")) }
     var textValue2 by remember { mutableStateOf(TextFieldValue("")) }
@@ -146,16 +148,18 @@ fun RegisterPasscodeScreen(onNavigateUp: () -> Unit, passcodeController: Passcod
                     KeyboardActions(
                         onDone = {
                             focusManager.clearFocus()
-                            validateAndRegister(
-                                textValue1.text,
-                                textValue2.text,
-                                context,
-                                registerPasscodeViewModel,
-                                onReset = {
-                                    textValue1 = TextFieldValue("")
-                                    textValue2 = TextFieldValue("")
-                                },
-                            )
+                            if (!inProgress) {
+                                validateAndRegister(
+                                    textValue1.text,
+                                    textValue2.text,
+                                    context,
+                                    registerPasscodeViewModel,
+                                    onReset = {
+                                        textValue1 = TextFieldValue("")
+                                        textValue2 = TextFieldValue("")
+                                    },
+                                )
+                            }
                         }
                     ),
             )
@@ -178,7 +182,8 @@ fun RegisterPasscodeScreen(onNavigateUp: () -> Unit, passcodeController: Passcod
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = textValue1.text.isNotEmpty() && textValue2.text.isNotEmpty(),
+                enabled =
+                    textValue1.text.isNotEmpty() && textValue2.text.isNotEmpty() && !inProgress,
             )
         }
     }

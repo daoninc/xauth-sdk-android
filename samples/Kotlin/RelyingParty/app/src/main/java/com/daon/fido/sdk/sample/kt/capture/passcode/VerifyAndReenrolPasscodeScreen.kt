@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,6 +59,7 @@ fun VerifyAndReenrolPasscodeScreen(
     val context = LocalContext.current
     val verifyAndReenrolPasscodeViewModel = hiltViewModel<PasscodeViewModel>()
     val eventFlow = verifyAndReenrolPasscodeViewModel.eventFlow
+    val inProgress by verifyAndReenrolPasscodeViewModel.inProgress.collectAsState()
 
     var currentPasscode by remember { mutableStateOf(TextFieldValue("")) }
     var newPasscode by remember { mutableStateOf(TextFieldValue("")) }
@@ -186,18 +188,20 @@ fun VerifyAndReenrolPasscodeScreen(
                     KeyboardActions(
                         onDone = {
                             focusManager.clearFocus()
-                            validateAndChange(
-                                currentPasscode.text,
-                                newPasscode.text,
-                                confirmPasscode.text,
-                                context,
-                                verifyAndReenrolPasscodeViewModel,
-                                onReset = {
-                                    currentPasscode = TextFieldValue("")
-                                    newPasscode = TextFieldValue("")
-                                    confirmPasscode = TextFieldValue("")
-                                },
-                            )
+                            if (!inProgress) {
+                                validateAndChange(
+                                    currentPasscode.text,
+                                    newPasscode.text,
+                                    confirmPasscode.text,
+                                    context,
+                                    verifyAndReenrolPasscodeViewModel,
+                                    onReset = {
+                                        currentPasscode = TextFieldValue("")
+                                        newPasscode = TextFieldValue("")
+                                        confirmPasscode = TextFieldValue("")
+                                    },
+                                )
+                            }
                         }
                     ),
             )
@@ -225,7 +229,8 @@ fun VerifyAndReenrolPasscodeScreen(
                 enabled =
                     currentPasscode.text.isNotEmpty() &&
                         newPasscode.text.isNotEmpty() &&
-                        confirmPasscode.text.isNotEmpty(),
+                        confirmPasscode.text.isNotEmpty() &&
+                        !inProgress,
             )
         }
     }

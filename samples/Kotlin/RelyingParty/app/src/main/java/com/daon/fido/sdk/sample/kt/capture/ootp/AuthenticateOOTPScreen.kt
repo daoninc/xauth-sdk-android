@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -131,6 +132,7 @@ private fun TransactionInputContent(viewModel: OOTPViewModel, onNavigateUp: () -
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
     var textValue by remember { mutableStateOf(TextFieldValue("")) }
+    val inProgress by viewModel.inProgress.collectAsState()
 
     // Handle retry by clearing text
     LaunchedEffect(viewModel) {
@@ -182,7 +184,9 @@ private fun TransactionInputContent(viewModel: OOTPViewModel, onNavigateUp: () -
                     KeyboardActions(
                         onDone = {
                             focusManager.clearFocus()
-                            submitAuthentication(textValue.text, viewModel)
+                            if (!inProgress) {
+                                submitAuthentication(textValue.text, viewModel)
+                            }
                         }
                     ),
             )
@@ -193,10 +197,12 @@ private fun TransactionInputContent(viewModel: OOTPViewModel, onNavigateUp: () -
                 text = "Authenticate",
                 onClick = {
                     focusManager.clearFocus()
-                    submitAuthentication(textValue.text, viewModel)
+                    if (!inProgress) {
+                        submitAuthentication(textValue.text, viewModel)
+                    }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = true,
+                enabled = !inProgress,
             )
         }
     }

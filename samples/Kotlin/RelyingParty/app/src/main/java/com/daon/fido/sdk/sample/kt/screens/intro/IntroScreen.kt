@@ -23,9 +23,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -80,8 +77,6 @@ fun IntroScreen(
     val uiState by viewModel.state.collectAsState()
     val context = LocalContext.current
     val eventFlow = viewModel.eventFlow
-    var hasPermissions by remember { mutableStateOf(false) }
-
     val permissionsLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
             permissions ->
@@ -97,7 +92,6 @@ fun IntroScreen(
                     .show()
                 onNavigateUp()
             } else {
-                hasPermissions = true
                 // Notification permission is optional - inform user if denied
                 if (
                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -124,12 +118,12 @@ fun IntroScreen(
                 }
                 .toTypedArray()
 
-        hasPermissions =
-            CORE_PERMISSIONS.all { permission ->
+        val allPermissionsGranted =
+            permissions.all { permission ->
                 context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
             }
 
-        if (!hasPermissions) {
+        if (!allPermissionsGranted) {
             permissionsLauncher.launch(permissions)
         } else {
             viewModel.startGps()

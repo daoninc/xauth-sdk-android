@@ -9,7 +9,9 @@ import com.daon.sdk.authenticator.controller.PasscodeController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 sealed class PasscodeUiEvent {
@@ -37,6 +39,9 @@ constructor(application: Application, private val prefs: SharedPreferences) :
     private val _eventFlow = MutableSharedFlow<PasscodeUiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
+    private val _inProgress = MutableStateFlow(false)
+    val inProgress = _inProgress.asStateFlow()
+
     private suspend fun emitEvent(event: PasscodeUiEvent) {
         _eventFlow.emit(event)
     }
@@ -55,12 +60,15 @@ constructor(application: Application, private val prefs: SharedPreferences) :
      * @param value The passcode to be registered.
      */
     fun register(value: String) {
+        if (_inProgress.value) return
+        _inProgress.value = true
         viewModelScope.launch {
             try {
                 controller.register(value.toCharArray()).collect { event ->
                     handleRegistrationEvent(event)
                 }
             } catch (e: Exception) {
+                _inProgress.value = false
                 showToastAndNavigateUp("Error: ${e.message}")
             }
         }
@@ -72,6 +80,8 @@ constructor(application: Application, private val prefs: SharedPreferences) :
      * @param value The passcode to be authenticated.
      */
     fun authenticate(value: String) {
+        if (_inProgress.value) return
+        _inProgress.value = true
         viewModelScope.launch {
             controller.authenticate(value.toCharArray()).collect { event ->
                 handleAuthenticationEvent(event)
@@ -86,6 +96,8 @@ constructor(application: Application, private val prefs: SharedPreferences) :
      * @param newPasscode The new passcode.
      */
     fun verifyAndReenrol(currentPasscode: String, newPasscode: String) {
+        if (_inProgress.value) return
+        _inProgress.value = true
         viewModelScope.launch {
             controller
                 .verifyAndReenroll(currentPasscode.toCharArray(), newPasscode.toCharArray())
@@ -108,6 +120,7 @@ constructor(application: Application, private val prefs: SharedPreferences) :
     }
 
     private suspend fun handleRegistrationEvent(event: CaptureController.RegistrationEvent) {
+        _inProgress.value = false
         when (event) {
             is CaptureController.RegistrationEvent.Success -> {
                 navigateUp()
@@ -130,6 +143,7 @@ constructor(application: Application, private val prefs: SharedPreferences) :
     }
 
     private suspend fun handleAuthenticationEvent(event: CaptureController.AuthenticationEvent) {
+        _inProgress.value = false
         when (event) {
             is CaptureController.AuthenticationEvent.Success -> {
                 navigateUp()

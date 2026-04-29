@@ -1,9 +1,9 @@
 [versions]
 ktfmt = "0.22.0"
-xauth = "1.0.0-beta4"
-xauth-authenticator = "1.0.0-beta4"
-xauth-face = "1.0.0-beta4"
-xauth-voice = "1.0.0-beta4"
+xauth = "1.0.0"
+xauth-authenticator = "1.0.0"
+xauth-face = "1.0.0"
+xauth-voice = "1.0.0"
 
 fido-crypto = "4.9.15"
 fido-device = "4.9.12"
